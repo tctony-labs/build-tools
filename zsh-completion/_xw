@@ -1,0 +1,317 @@
+#compdef xw
+_xw() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -C \
+    ':command:->command' \
+    '*::options:->options'
+
+  case $state in
+    (command)
+      local -a commands
+      commands=(
+        # command begin
+        'gclient:get and update source code with gclient'
+        "gc:alias for gclient"
+        'gn:generate build files with gn'
+        'ninja:build targets with ninja'
+        "nj:alias for ninja"
+        'tool:run scripts in tools directory'
+        "t:alias for tool"
+        'print:print value for key'
+        "p:alias for print"
+        'auto-update:check for build-tools updates or enable/disable automatic updates'
+        'help:display help for command'
+        # command end
+      )
+      _describe -t commands 'xw' commands
+    ;; # command
+
+    (options)
+      case $line[1] in
+        # command dispatch begin
+        (gclient)        __xw-gclient             ;;
+        (gc)             __xw-gclient             ;;
+        (gn)             __xw-gn                  ;;
+        (ninja)          __xw-ninja               ;;
+        (nj)             __xw-ninja               ;;
+        (tool)           __xw-tool                ;;
+        (t)              __xw-tool                ;;
+        (print)          __xw-print               ;;
+        (p)              __xw-print               ;;
+        (auto-update)    __xw-auto-update         ;;
+        (help)           __xw-help                ;;
+        # command dispatch end
+      esac # line[1]
+    ;; # options
+
+  esac # state
+}
+
+__xw-gclient() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+  _arguments -C \
+    ':command:->command' \
+    '*::options:->options'
+  case $state in
+    (command)
+      local -a commands
+      commands=(
+        # gclient begin
+        "config:creates a .gclient file in the current directory"
+        "diff:displays local diff for every dependencies"
+        "fetch:fetches upstream commits for all modules"
+        "flatten:flattens the solutions into a single DEPS file"
+        "getdep:gets revision information and variable values from a DEPS file"
+        "grep:greps through git repos managed by gclient"
+        "help:prints list of commands or help for a specific command"
+        "metrics:reports, and optionally modifies, the status of metric collection"
+        "pack:generates a patch which can be applied at the root of the tree"
+        "recurse:operates [command args ...] on all the dependencies"
+        "revert:reverts all modifications in every dependencies"
+        "revinfo:outputs revision info mapping for the client and its dependencies"
+        "root:outputs the solution root (or current dir if there isn't one)"
+        "runhooks:runs hooks for files that have been modified in the local working copy"
+        "setdep:modifies dependency revisions and variable values in a DEPS file"
+        "status:shows modification status for every dependencies"
+        "sync:checkout/update all modules"
+        "validate:validates the .gclient and DEPS syntax"
+        "verify:verifies the DEPS file deps are only from allowed_hosts"
+        # gclient end
+      )
+      _describe -t commands 'xw gclient' commands
+    ;; # command
+    (options)
+      case $line[1] in
+      esac # line[1]
+    ;; # options
+  esac # state
+}
+
+__xw-gn() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+  _arguments -C \
+    '1:command:->command' \
+    '2::directories:_directories' \
+    '*::options:->options'
+  case $state in
+    (command)
+      local -a commands
+      commands=(
+        # gn begin
+        "analyze:Analyze which targets are affected by a list of files."
+        "args:Display or configure arguments declared by the build."
+        "check:Check header dependencies."
+        "clean:Cleans the output directory."
+        "clean_stale:Cleans the stale output files from the output directory."
+        "desc:Show lots of insightful information about a target or config."
+        "format:Format .gn files."
+        "gen:Generate ninja files."
+        "help:Does what you think."
+        "ls:List matching targets."
+        "meta:List target metadata collection results."
+        "outputs:Which files a source/target make."
+        "path:Find paths between two targets."
+        "refs:Find stuff referencing a target or file."
+        # gn end
+      )
+      _describe -t commands 'xw gn' commands
+    ;; # command
+    (options)
+      case $line[1] in
+        (gen)
+          _arguments \
+            '1::directories:_directories' \
+            '--ide=[available ides: xcode msvs]:(xcode msvs)' \
+            '--add-export-compile-commands=[add extra target to generate compile commands]'
+        ;; # gen
+        (desc)
+          _arguments \
+            '1::directories:_directories' \
+            '2::targets:_gn-targets'
+        ;; # desc
+        (refs)
+          _arguments \
+            '1::directories:_directories'\
+            '2::targets:_gn-targets'
+        ;; # refs
+        (path)
+          _arguments \
+            '1::directories:_directories'\
+            '2::targets:_gn-targets' \
+            '3::targets:_gn-targets'
+        ;; # path
+      esac # line[1]
+    ;; # options
+  esac # state
+}
+# gn functions
+(( $+functions[_gn-get-targets] )) || _gn-get-targets() {
+  dir="."
+  if [ -n "${words[2]}" ];
+  then
+    eval dir="${words[2]}"
+  fi
+  targets_command="xw gn ls \"${dir}\""
+  eval ${targets_command} 2>/dev/null | sed 's/:/\\:/g'
+}
+(( $+functions[_gn-targets] )) || _gn-targets() {
+  local -a targets
+  targets=(${(fo)"$(_gn-get-targets)"})
+  _describe 'targets' targets
+}
+# gn functions end
+
+__xw-ninja() {
+  _arguments \
+    '(- *)'{-h,--help}'[Show help]' \
+    '(- *)--version[Print ninja version]' \
+    '-C+[Change to directory before doing anything else]:directories:_directories' \
+    '-f+[Specify input build file (default=build.ninja)]:files:_files' \
+    '-j+[Run N jobs in parallel (default=number of CPUs available)]:number of jobs' \
+    '-l+[Do not start new jobs if the load average is greater than N]:number of jobs' \
+    '-k+[Keep going until N jobs fail (default=1)]:number of jobs' \
+    '-n[Dry run (do not run commands but act like they succeeded)]' \
+    '(-v --verbose --quiet)'{-v,--verbose}'[Show all command lines while building]' \
+    "(-v --verbose --quiet)--quiet[Don't show progress status, just command output]" \
+    '-d+[Enable debugging (use -d list to list modes)]:modes:_ninja-modes' \
+    '-t+[Run a subtool (use -t list to list subtools)]:tools:_ninja-tools' \
+    '*::targets:_ninja-targets'
+}
+# ninja functions
+(( $+functions[_ninja-get-targets] )) || _ninja-get-targets() {
+  dir="."
+  if [ -n "${opt_args[-C]}" ];
+  then
+    eval dir="${opt_args[-C]}"
+  fi
+  file="build.ninja"
+  if [ -n "${opt_args[-f]}" ];
+  then
+    eval file="${opt_args[-f]}"
+  fi
+  targets_command="xw nj -f \"${file}\" -C \"${dir}\" -t targets all"
+  eval ${targets_command} 2>/dev/null | cut -d: -f1
+}
+
+(( $+functions[_ninja-get-tools] )) || _ninja-get-tools() {
+  # remove the first line; remove the leading spaces; replace spaces with colon
+  xw nj -t list 2> /dev/null | sed -e '1d;s/^ *//;s/ \{2,\}/:/'
+}
+
+(( $+functions[_ninja-get-modes] )) || _ninja-get-modes() {
+  # remove the first line; remove the last line; remove the leading spaces; replace spaces with colon
+  xw nj -d list 2> /dev/null | sed -e '1d;$d;s/^ *//;s/ \{2,\}/:/'
+}
+
+(( $+functions[_ninja-modes] )) || _ninja-modes() {
+  local -a modes
+  modes=(${(fo)"$(_ninja-get-modes)"})
+  _describe 'modes' modes
+}
+
+(( $+functions[_ninja-tools] )) || _ninja-tools() {
+  local -a tools
+  tools=(${(fo)"$(_ninja-get-tools)"})
+  _describe 'tools' tools
+}
+
+(( $+functions[_ninja-targets] )) || _ninja-targets() {
+  local -a targets
+  targets=(${(fo)"$(_ninja-get-targets)"})
+  _describe 'targets' targets
+}
+# ninja functions end
+
+__xw-tool() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+  _arguments -C \
+    ':command:->command' \
+    '*::options:->options'
+  case $state in
+    (command)
+      _arguments \
+        '*::tools:_xw-tools'
+    ;; # command
+    (options)
+      case $line[1] in
+      esac # line[1]
+    ;; # options
+  esac # state
+}
+# tool functions
+(( $+functions[_xw-get-tools] )) || _xw-get-tools() {
+  targets_command="xw t"
+  # $d连续使用不work
+  eval ${targets_command} 2>/dev/null | sed '1,3d;$d' | sed '$d' | sed '$d;s/^ *//'
+}
+(( $+functions[_xw-tools] )) || _xw-tools() {
+  local -a tools
+  tools=(${(fo)"$(_xw-get-tools)"})
+  _describe 'tools' tools
+}
+# tool functions end
+
+__xw-print() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+  _arguments -C \
+    ':command:->command' \
+    '*::options:->options'
+  case $state in
+    (command)
+      _arguments \
+        '*::keys:_xw-print'
+    ;; # command
+    (options)
+      case $line[1] in
+      esac # line[1]
+    ;; # options
+  esac # state
+}
+# print functions
+(( $+functions[_xw-get-print-keys] )) || _xw-get-print-keys() {
+  targets_command="xw p"
+  eval ${targets_command} 2>/dev/null | sed '1,3d;$d' | sed '$d' | sed '$d;s/^ *//'
+}
+(( $+functions[_xw-print] )) || _xw-print() {
+  local -a keys
+  keys=(${(fo)"$(_xw-get-print-keys)"})
+  _describe 'keys' keys
+}
+# print functions end
+
+__xw-auto-update() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+  _arguments -C \
+    ':command:->command' \
+    '*::options:->options'
+  case $state in
+    (command)
+      local -a commands
+      commands=(
+        # update begin
+        "check:"
+        "enable:"
+        "disable:"
+        # update end
+      )
+      _describe -t commands 'xw auto-update' commands
+    ;; # command
+    (options)
+      case $line[1] in
+      esac # line[1]
+    ;; # options
+  esac # state
+}
+
+__xw-help() {
+  # do nothing
+}
+
+_xw

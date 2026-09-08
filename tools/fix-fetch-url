@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+// -*- mode: js2; -*-
+
+/**
+ * After gclient sync with git cache enabled, your repo would have a fetch url point to
+ * a local file path which never update. This script set fetch url to the same as push
+ * url. Then you manage this repo all by yourself which is what we want for our primary
+ * solution repo.
+ *
+   A gclient hook may be like this:
+     {
+       'name': 'fix-fetch-url',
+       'pattern': '.',
+       'action': [
+         'node',
+         Var('build_tools_path') + '/tools/fix-fetch-url',
+         'src/REPO_NAME'
+       ],
+     }
+ */
+
+const cp = require('child_process');
+
+if (process.argv.length < 3) {
+  console.log(`Usage: ${process.argv[1]} git_repo_path [remote_name]`);
+  process.exit(0);
+}
+const git_repo_path = process.argv[2];
+
+let remote_name = 'origin';
+if (process.argv.length > 3) {
+  remote_name = process.argv[3];
+}
+
+const url = cp
+  .execFileSync('git', ['remote', 'get-url', '--push', remote_name], {
+    cwd: git_repo_path,
+  })
+  .toString()
+  .trim();
+
+cp.execFileSync('git', ['remote', 'set-url', remote_name, url], {
+  cwd: git_repo_path,
+});
+
+console.log(`fetch url of '${git_repo_path}'\nset to '${url}'`);

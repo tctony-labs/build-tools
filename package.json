@@ -1,0 +1,46 @@
+{
+  "name": "build-tools",
+  "version": "0.1.0",
+  "description": "General-purpose build tools integrating depot_tools, gclient, GN, and Ninja",
+  "private": true,
+  "scripts": {
+    "lint": "prettier --check \"src/**/*.js\" \"tests/*.js\" \"src/xw\"",
+    "prettier:write": "prettier --write \"src/**/*.js\" \"tests/*.js\" \"src/xw\"",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tctony-labs/build-tools.git"
+  },
+  "keywords": [
+    "build",
+    "tools",
+    "depot_tools",
+    "gclient",
+    "gn",
+    "ninja"
+  ],
+  "license": "MIT",
+  "lint-staged": {
+    "*.js": [
+      "prettier --write"
+    ],
+    "xw": [
+      "prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.0",
+    "prettier": "^2.8.4"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^10.0.0",
+    "ini": "^3.0.1",
+    "path-key": "^3.1.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

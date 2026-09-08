@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+// -*- mode: js2; -*-
+
+/**
+ * Run `git rev-parse head` in current or target directory
+ *  xw tool last-commit [git_dir_or_current_dir]
+ */
+
+const cp = require('child_process');
+const path = require('path');
+
+let target_dir = '.';
+if (process.argv.length >= 3) {
+  target_dir = process.argv[2];
+}
+target_dir = path.resolve(target_dir);
+
+cp.execFileSync('git', ['rev-parse', 'head'], {
+  cwd: target_dir,
+  stdio: 'inherit',
+});

@@ -1,0 +1,52 @@
+#!/usr/bin/env node
+// -*- mode: js2; -*-
+
+/**
+ * After commit in a repo that managed by gclient, use this script to update revision
+ * in DEPS in src. For example:
+ *   xw tool set-dep-for some_proj
+ */
+
+const cp = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+const { xwcmd, get_gclient_root } = require('./util/util.js');
+
+if (process.argv.length !== 3) {
+  console.log(`Usage: ${process.argv[1]} path_relative_to_dep_dir`);
+  process.exit(0);
+}
+
+const proj_path = path.resolve(process.argv[2]);
+
+const commit = cp
+  .execFileSync('git', ['rev-parse', 'head'], {
+    cwd: proj_path,
+  })
+  .toString()
+  .trim();
+
+const root = get_gclient_root();
+
+let deps = 'DEPS';
+if (!fs.existsSync(deps)) {
+  // TODO get primary solution dir
+  deps = `${path.relative(process.cwd(), path.join(root, 'src', 'DEPS'))}`;
+}
+
+cp.execFileSync(
+  xwcmd,
+  [
+    //
+    'gc',
+    'setdep',
+    '-r',
+    `${path.relative(root, proj_path).replace('\\', '/')}@${commit}`,
+    '--deps-file',
+    deps,
+  ],
+  {
+    stdio: 'inherit',
+  },
+);

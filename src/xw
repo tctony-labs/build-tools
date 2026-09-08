@@ -1,0 +1,162 @@
+#!/usr/bin/env node
+// -*- mode: js2 -*-
+
+const program = require('commander');
+const cp = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+// Refresh the PATH variable at the top of this shell so that retries in the same shell get the latest PATH variable
+const { refreshPathVariable } = require('./utils/refresh-path');
+refreshPathVariable();
+
+const xwrc = require('./utils/xwrc');
+xwrc.ensure();
+
+// check update
+const { maybeCheckForUpdates } = require('./utils/check-update');
+const package = require('../package.json');
+if (maybeCheckForUpdates()) {
+  // re-run the current invocation with the updated build-tools
+  const result = cp.spawnSync(
+    process.execPath,
+    process.argv[0] === process.execPath ? process.argv.slice(1) : process.argv,
+    {
+      cwd: process.cwd(),
+      stdio: 'inherit',
+    },
+  );
+  process.exit(result.status);
+}
+
+// shared utils
+const depot = require('./utils/depot-tools');
+const {
+  ensureDir,
+  gitCachePath,
+  rootPath,
+  escapeWindowsPath,
+  resolveBinScript,
+  depotToolsPath,
+  findFileInCurrentOrParent,
+} = require('./utils/paths');
+const { ensureSpawnOk } = require('./utils/misc');
+const { fatal } = require('./utils/logging');
+
+// basic info
+program
+  .usage('<command> [commandArgs...]')
+  .description('General-purpose build tools integrating depot_tools, gclient, GN, and Ninja.');
+
+// gclient
+function formatCustomVar(key, val) {
+  return `--custom-var=${key}="${val}"`;
+}
+
+program
+  .command('gclient')
+  .alias('gc')
+  .arguments('[gclientArgs...]')
+  .description('get and update source code with gclient')
+  .allowUnknownOption()
+  .helpOption('\0')
+  .action((argsIn) => {
+    depot.ensure();
+    ensureDir(gitCachePath);
+
+    // 避免在其他工具创建的 workspace 中误用 xw gc
+    const dot_gclient = findFileInCurrentOrParent('.gclient', process.cwd());
+    if (dot_gclient) {
+      const content = fs.readFileSync(dot_gclient, 'utf8').toString();
+      if (content.indexOf('build_tools_path') === -1) {
+        fatal('.gclient is not created by xw gc. you should have used xw gc in a wrong workspace!');
+        process.exit(1);
+      }
+    }
+
+    const args = [...argsIn];
+
+    const processArgs = {
+      config: (argsInOut) => {
+        argsInOut.splice(
+          args.length - 1,
+          0,
+          formatCustomVar('build_tools_path', escapeWindowsPath(rootPath)),
+        );
+      },
+      sync: (argsInOut) => {
+        argsInOut.splice(1, 0, '--with_branch_heads', '--with_tags', '-v');
+      },
+    };
+    if (processArgs[args[0]]) {
+      processArgs[args[0]](args);
+    }
+
+    let cmd = 'gclient';
+    if (process.platform === 'win32') {
+      cmd = path.resolve(depotToolsPath, resolveBinScript(cmd));
+    }
+
+    ensureSpawnOk(depot.spawnSync({}, cmd, args), 'run gclient...');
+  });
+
+// gn
+program
+  .command('gn')
+  .arguments('[gnArgs...]')
+  .description('generate build files with gn')
+  .allowUnknownOption()
+  .helpOption('\0')
+  .action((argsIn) => {
+    //  console.log('gn', argsIn, optsIn);
+
+    depot.ensure();
+
+    const args = [...argsIn];
+
+    let cmd = 'gn';
+    if (process.platform === 'win32') {
+      cmd = path.resolve(depotToolsPath, resolveBinScript(cmd));
+    }
+
+    ensureSpawnOk(depot.spawnSync({}, cmd, args), `run ${cmd}...`);
+  });
+
+// ninja
+program
+  .command('ninja')
+  .alias('nj')
+  .description('build targets with ninja')
+  .arguments('[ninjaArgs...]')
+  .allowUnknownOption()
+  .helpOption('\0')
+  .action((argsIn) => {
+    depot.ensure();
+
+    const args = [...argsIn];
+
+    let cmd = 'autoninja';
+    if (process.platform === 'win32') {
+      cmd = path.resolve(depotToolsPath, resolveBinScript(cmd));
+    }
+
+    ensureSpawnOk(depot.spawnSync({}, cmd, args), `run ${cmd}...`);
+  });
+
+// tools
+program.command('tool [name] [args...]', 'run scripts in tools directory').alias('t');
+
+// print
+program.command('print [key]', 'print value for key').alias('p');
+
+// auto update
+program.command(
+  'auto-update [command]',
+  'check for build-tools updates or enable/disable automatic updates',
+);
+
+program.on('--help', () => {
+  console.error(`\nCheckout sources at ${package.repository.url} for implement details.`);
+});
+
+program.parse(process.argv);

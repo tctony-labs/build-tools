@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+// -*- mode: js2; -*-
+
+/**
+ * xw tool copy-file from to
+ */
+
+const fs = require('fs');
+
+if (process.argv.length < 4) {
+  console.log(`Usage: ${process.argv[1]} from to`);
+  process.exit(0);
+}
+
+fs.copyFileSync(process.argv[2], process.argv[3]);
+
+console.log(`Copied ${process.argv[2]} to ${process.argv[3]}`);
