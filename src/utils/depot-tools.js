@@ -57,7 +57,7 @@ function depotOpts(config, opts) {
   };
 
   opts.env = {
-    BUILD_TOOLS_PATH: rootPath,
+    XIAOWEI_BUILD_TOOLS_PATH: rootPath,
 
     // set these defaults that can be overridden via process.env
     PYTHONDONTWRITEBYTECODE: '1', // depot needs it

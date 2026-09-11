@@ -12,7 +12,6 @@ for (const scenario of ['existing', 'update', 'clone']) {
     t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
     const workspace = path.join(directory, 'workspace with spaces');
     fs.mkdirSync(path.join(workspace, 'src', 'dependency'), { recursive: true });
-    fs.writeFileSync(path.join(workspace, '.gclient'), '# build_tools_path\n');
     const depot = path.join(directory, 'depot');
     if (scenario !== 'clone') {
       fs.mkdirSync(depot);

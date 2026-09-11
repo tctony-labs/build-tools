@@ -38,7 +38,7 @@ Automatic checks run at most once every 24 hours when enabled. Updates use `git 
 
 ## Workspace integration
 
-gclient configurations use `build_tools_path` as the custom variable and `BUILD_TOOLS_PATH` as the child-process environment variable. Use `build_tools_path` in `.gclient` and `DEPS` to reference the build-tools installation.
+gclient configurations use `xiaowei_build_tools_path` as the custom variable and `XIAOWEI_BUILD_TOOLS_PATH` as the child-process environment variable. Use `xiaowei_build_tools_path` in `.gclient` and `DEPS` to reference the build-tools installation.
 
 Git cache is stored at `~/.git_cache`. Chromium depot_tools is downloaded from its public upstream as needed and is not included in this repository. Set `DEPOT_TOOLS_DIR` to an absolute path to use a different depot_tools directory; downloads, updates, command lookup, and `xw p depot_tools_path` all use this location.
 

@@ -13,7 +13,7 @@
        'pattern': '.',
        'action': [
          'node',
-         Var('build_tools_path') + '/tools/fix-fetch-url',
+         Var('xiaowei_build_tools_path') + '/tools/fix-fetch-url',
          'src/REPO_NAME'
        ],
      }

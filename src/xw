@@ -3,7 +3,6 @@
 
 const program = require('commander');
 const cp = require('child_process');
-const fs = require('fs');
 const path = require('path');
 
 // Refresh the PATH variable at the top of this shell so that retries in the same shell get the latest PATH variable
@@ -38,10 +37,8 @@ const {
   escapeWindowsPath,
   resolveBinScript,
   depotToolsPath,
-  findFileInCurrentOrParent,
 } = require('./utils/paths');
 const { ensureSpawnOk } = require('./utils/misc');
-const { fatal } = require('./utils/logging');
 
 // basic info
 program
@@ -64,16 +61,6 @@ program
     depot.ensure();
     ensureDir(gitCachePath);
 
-    // 避免在其他工具创建的 workspace 中误用 xw gc
-    const dot_gclient = findFileInCurrentOrParent('.gclient', process.cwd());
-    if (dot_gclient) {
-      const content = fs.readFileSync(dot_gclient, 'utf8').toString();
-      if (content.indexOf('build_tools_path') === -1) {
-        fatal('.gclient is not created by xw gc. you should have used xw gc in a wrong workspace!');
-        process.exit(1);
-      }
-    }
-
     const args = [...argsIn];
 
     const processArgs = {
@@ -81,7 +68,7 @@ program
         argsInOut.splice(
           args.length - 1,
           0,
-          formatCustomVar('build_tools_path', escapeWindowsPath(rootPath)),
+          formatCustomVar('xiaowei_build_tools_path', escapeWindowsPath(rootPath)),
         );
       },
       sync: (argsInOut) => {
