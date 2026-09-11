@@ -11,7 +11,7 @@ function updateDepotTools() {
   const depot_dir = depotToolsPath;
   console.error(`Updating ${color.path(depot_dir)}`);
   const opts = {
-    env: { DEPOT_TOOLS_UPDATE: 0 },
+    env: { DEPOT_TOOLS_UPDATE: 1 },
     stdio: ['inherit', 2, 2],
   };
   if (os.platform() === 'win32') {
